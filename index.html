@@ -3,6 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <title>Karl Josefsson Data Viz Portfolio</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .chart-container {
+            width: 250px;
+            margin: 20px auto;
+        }
+        
+        .multiline-chart-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .axis-x path,
+        .axis-y path {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+
+        .axis-x .tick line,
+        .axis-y .tick line {
+            stroke: #ccc;
+        }
+
+        .axis text {
+            font-size: 12px;
+        }
+
+        .line {
+            fill: none;
+            stroke-width: 2px;
+        }
+
+        .sweden {
+            stroke: greenyellow;
+        }
+
+        .denmark {
+            stroke: red;
+        }
+
+        .finland {
+            stroke: darkblue;
+        }
+
+        .norway {
+            stroke: darkgreen;
+        }
+
+        .iceland {
+            stroke: lightcyan;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -68,6 +123,315 @@
     <ol>
         <li>Sketch 1 - <a href="https://vizhub.com/karldif01/ffcf82644e3e4cdcb918684ae4433a9d">Choropleth Map in D3</a></li>
         <li>Sketch 2 - <a href="https://vizhub.com/karldif01/8f9ee4fe953c49b9a40307528006306e">Proportional Symbols Map in D3</a></li>
+
+    </ol>
+
+    <h3>Assignment 10</h3>
+    <ol>
+        <li>
+            <p style="margin-bottom: 10px;">
+                This visualization is misleading because the y-axis starts at 20.0 instead of 0, 
+                which exaggerates the differences between the profit values. Visually, 
+                it makes it seem like there is a large jump in profits from month to month, 
+                when in reality, the changes are very small. Below the misleading chart is the white hat version of the chart,
+                which starts at 0 and accurately represents the data, its made in tableau.
+            </p>
+            <img src="plot_png/barChart.png" alt="misleading bar chart" width="250" style="display: block; margin: 0 auto;">
+            <img src="plot_png/whitehatBarChart.png" alt="Not misleading chart" width="250" style="display: block; margin: 0 auto;">
+
+        </li>
+        
+        <li>
+            <p style="margin-bottom: 10px;">
+                I chose this visualization after reading the FDV 3D chapters, and the chapter was talking about how some 3D visuals can be misleading.
+                This visualization is misleading because it uses a 3D pie chart, which can make it difficult to accurately compare the sizes of the slices.
+                The 3D effect can distort the perception of the data, making it hard to see the true proportions of each slice.
+                I made a 2D viersion of the chart in 2D which is much easier to read and interpret the size and proportions.
+            </p>
+            <img src="plot_png/pieChart.png" alt="misleading bar chart" width="250" style="display: block; margin: 0 auto;">
+
+        </li>
+
+            <div class="chart-container">
+                <div id="pie-chart-2d"></div>
+            </div>
+            
+                <script>
+                    (function() {
+                        const width = 250;
+                        const height = 250;
+                        const margin = 20;
+                        const radius = Math.min(width, height) / 2 - margin;
+                        
+                        const svg = d3.select("#pie-chart-2d")
+                            .append("svg")
+                            .attr("width", width)
+                            .attr("height", height)
+                            .append("g")
+                            .attr("transform", `translate(${width/2}, ${height/2})`);
+                        
+                        const data = [
+                            { class: '1st', count: 11, color: '#c0c0c0' },
+                            { class: '2nd', count: 18, color: '#e15759' },
+                            { class: '3rd', count: 71, color: '#2a3f8e' }
+                        ];
+                        
+                        const pie = d3.pie().value(d => d.count);
+                        const data_ready = pie(data);
+                        
+                        svg.selectAll('path')
+                            .data(data_ready)
+                            .join('path')
+                            .attr('d', d3.arc().innerRadius(0).outerRadius(radius))
+                            .attr('fill', d => d.data.color)
+                            .attr('stroke', 'white')
+                            .style('stroke-width', '2px');
+                        
+                        //  labels
+                        svg.selectAll('text')
+                            .data(data_ready)
+                            .join('text')
+                            .text(d => `${d.data.class}\n${d.data.count}%`)
+                            .attr('transform', d => {
+                                const pos = d3.arc()
+                                    .innerRadius(radius * 0.5)
+                                    .outerRadius(radius * 0.7)
+                                    .centroid(d);
+                                return `translate(${pos})`;
+                            })
+                            .style('text-anchor', 'middle')
+                            .style('font-size', '12px')
+                            .style('font-weight', 'bold')
+                            .style('fill', 'white');
+                        
+                        // Add title
+                        svg.append('text')
+                            .attr('text-anchor', 'middle')
+                            .attr('y', -height/2 + 15)
+                            .text('Passenger Class on the Titanic (2D)')
+                            .style('font-size', '14px');
+                    })();
+                </script>
+        </li>
+        
+
+        <li>
+            <p style="margin-bottom: 10px;">
+                The misleading chart I made was a multiline chart with a log scale on the y-axis.
+                This is misleading because when looking at the chart, the lines are not accurately representing the data where they visually seem closer to each other than they actually are.
+                Then I created the chart with just a linear scale on the y-axis, which shows the clear differences visually which it did not before.
+            </p>
+            
+            <div id="linear-chart" class="multiline-chart-container">
+                <h2>COVID Cases in Scandinavia October 2020 (Linear Scale)</h2>
+            </div>
+
+            <div id="log-chart" class="multiline-chart-container">
+                <h2>COVID Cases in Scandinavia October 2020 (Log Scale)</h2>
+            </div>
+
+                <script>
+                    // Create both charts
+                    createChart('#linear-chart', 'linear');
+                    createChart('#log-chart', 'log');
+
+                    function createChart(containerId, scaleType) {
+                        // SVG container
+                        const container = d3.select(containerId);
+                        const svgWidth = 800; // Fixed width for better display
+                        const svgHeight = 400; // Smaller height
+                        const margin = {
+                            top: 30,
+                            right: 150,
+                            bottom: 70,
+                            left: 100,
+                        };
+                        const width = svgWidth - margin.left - margin.right;
+                        const height = svgHeight - margin.top - margin.bottom;
+
+                        const svg = container
+                            .append('svg')
+                            .attr('width', svgWidth)
+                            .attr('height', svgHeight)
+                            .append('g')
+                            .attr(
+                            'transform',
+                            `translate(${margin.left},${margin.top})`,
+                            );
+
+                        d3.csv(
+                            'https://gist.githubusercontent.com/karldif01/f9b181c357975ef0f5fbe1d45c313c31/raw/76f6ebff044061a45a095fa929b2a5c90a65202a/gistfile1.txt',
+                        ).then(function (data) {
+                            const countryData = {
+                            Sweden: [],
+                            Denmark: [],
+                            Norway: [],
+                            Finland: [],
+                            Iceland: [],
+                            };
+
+                            data.forEach(function (d) {
+                            const day = +d['Date.Day'];
+                            const cases = +d['Data.Cases'];
+                            const country = d['Location.Country'];
+
+                            if (country in countryData) {
+                                countryData[country].push({ day, cases });
+                            }
+                            });
+
+                            // sort data for each country by day
+                            Object.keys(countryData).forEach((country) => {
+                            countryData[country].sort(
+                                (a, b) => a.day - b.day,
+                            );
+                            });
+
+                            // x and y scales
+                            const x = d3
+                            .scaleLinear()
+                            .domain([1, 31])
+                            .range([0, width]);
+
+                            const maxCases = d3.max(
+                            Object.values(countryData)
+                                .flat()
+                                .map((d) => d.cases),
+                            );
+
+                            // Choose scale type based on parameter
+                            let y;
+                            if (scaleType === 'linear') {
+                            y = d3
+                                .scaleLinear()
+                                .domain([0, maxCases])
+                                .nice()
+                                .range([height, 0]);
+                            } else {
+                            y = d3
+                                .scaleLog()
+                                .domain([1, maxCases])
+                                .nice()
+                                .range([height, 0]);
+                            }
+
+                            // Line function
+                            const line = d3
+                            .line()
+                            .x((d) => x(d.day))
+                            .y((d) => {
+                                // Handle zero values for log scale
+                                if (scaleType === 'log' && d.cases <= 0) {
+                                return y(1);
+                                }
+                                return y(d.cases);
+                            });
+
+                            // x and y axes
+                            svg
+                            .append('g')
+                            .attr('class', 'axis axis-x')
+                            .attr('transform', `translate(0, ${height})`)
+                            .call(d3.axisBottom(x).ticks(10));
+
+                            // Y-axis with appropriate ticks
+                            if (scaleType === 'linear') {
+                            svg
+                                .append('g')
+                                .attr('class', 'axis axis-y')
+                                .call(d3.axisLeft(y).ticks(6));
+                            } else {
+                            svg
+                                .append('g')
+                                .attr('class', 'axis axis-y')
+                                .call(
+                                d3
+                                    .axisLeft(y)
+                                    .tickValues([10, 100, 1000, 5000])
+                                    .tickFormat(d3.format(',d')),
+                                );
+                            }
+
+                            // x axis label
+                            svg
+                            .append('text')
+                            .attr('x', width / 2)
+                            .attr('y', height + margin.bottom - 20)
+                            .attr('text-anchor', 'middle')
+                            .attr('font-size', '16px')
+                            .text('Day');
+
+                            // y axis label
+                            svg
+                            .append('text')
+                            .attr('x', -height / 2)
+                            .attr('y', -margin.left + 40)
+                            .attr('transform', 'rotate(-90)')
+                            .attr('text-anchor', 'middle')
+                            .attr('font-size', '16px')
+                            .text(
+                                'Number of COVID Cases' +
+                                (scaleType === 'log' ? ' (Log Scale)' : ''),
+                            );
+
+                            // Draw lines for each country
+                            Object.keys(countryData).forEach((country) => {
+                            svg
+                                .append('path')
+                                .datum(countryData[country])
+                                .attr(
+                                'class',
+                                `line ${country.toLowerCase()}`,
+                                )
+                                .attr('d', line);
+                            });
+
+                            // legend
+                            const legend = svg
+                            .selectAll('.legend')
+                            .data(Object.keys(countryData))
+                            .enter()
+                            .append('g')
+                            .attr('class', 'legend')
+                            .attr(
+                                'transform',
+                                (d, i) => `translate(0, ${i * 25})`,
+                            );
+
+                            legend
+                            .append('rect')
+                            .attr('x', width + 20)
+                            .attr('width', 18)
+                            .attr('height', 18)
+                            .attr('class', (d) => d.toLowerCase())
+                            .style('fill', 'none')
+                            .style('stroke', (d) => {
+                                switch (d) {
+                                case 'Sweden':
+                                    return 'greenyellow';
+                                case 'Denmark':
+                                    return 'red';
+                                case 'Finland':
+                                    return 'darkblue';
+                                case 'Norway':
+                                    return 'darkgreen';
+                                case 'Iceland':
+                                    return 'lightcyan';
+                                }
+                            })
+                            .style('stroke-width', 2);
+
+                            legend
+                            .append('text')
+                            .attr('x', width + 45)
+                            .attr('y', 9)
+                            .attr('dy', '.35em')
+                            .style('text-anchor', 'start')
+                            .text((d) => d);
+                        });
+                    }
+                </script>
+        </li>
 
     </ol>
 </body>
